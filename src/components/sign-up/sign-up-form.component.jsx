@@ -1,14 +1,9 @@
 import { useState } from 'react';
-
+import { useDispatch } from 'react-redux';
 import FormInput from '../form-input/form-input.component';
 import Button from '../button/button.component';
-
-import {
-  createAuthUserWithEmailAndPassword,
-  createUserDocumentFromAuth,
-} from '../../utils/firebase/firebase.utils';
-
 import { SignUpContainer } from './sign-up-form.styles';
+import { signUpStart } from '../../store/user/user.action';
 
 const defaultFormFields = {
   displayName: '',
@@ -20,6 +15,7 @@ const defaultFormFields = {
 const SignUpForm = () => {
   const [formFields, setFormFields] = useState(defaultFormFields);
   const { displayName, email, password, confirmPassword } = formFields;
+  const dispatch = useDispatch();
 
   const resetFormFields = () => {
     setFormFields(defaultFormFields);
@@ -29,23 +25,18 @@ const SignUpForm = () => {
     event.preventDefault();
 
     if (password !== confirmPassword) {
-      alert('Wachtwoorden komen niet overeen');
+      alert('passwords do not match');
       return;
     }
 
     try {
-      const { user } = await createAuthUserWithEmailAndPassword(
-        email,
-        password
-      );
-
-      await createUserDocumentFromAuth(user, { displayName });
+      dispatch(signUpStart(email, password, displayName));
       resetFormFields();
     } catch (error) {
       if (error.code === 'auth/email-already-in-use') {
-        alert('Aanmaken mislukt, email al in gebruik');
+        alert('kan gebruiker niet aanmaken, email al in gebruik');
       } else {
-        console.log('Er is iets misgegaan', error);
+        console.log('fout bij aanmaken gebruiker', error);
       }
     }
   };
@@ -59,7 +50,7 @@ const SignUpForm = () => {
   return (
     <SignUpContainer>
       <h2>Nog geen account?</h2>
-      <span>Maak een nieuw account aan met email en wachtwoord</span>
+      <span>Aanmelden met email en wachtwoord</span>
       <form onSubmit={handleSubmit}>
         <FormInput
           label="Gebruikersnaam"
